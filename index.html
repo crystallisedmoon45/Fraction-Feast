@@ -21,6 +21,11 @@
                 <img src="https://via.placeholder.com/150x150?text=Pizza" alt="Whole Pizza" id="pizza-img">
                 <button id="cut-pizza-half">Cut in Half</button>
                 <button id="cut-pizza-thirds">Cut in Thirds</button>
+                <div class="custom-cut-section">
+                    <label for="custom-fraction-input">Cut Custom Slice:</label>
+                    <input type="text" id="custom-fraction-input" placeholder="e.g., 1/8 or 3/4">
+                    <button id="cut-custom-button">Cut</button>
+                </div>
                 </div>
         </div>
 
@@ -37,6 +42,7 @@
             <p>Welcome to Fraction Feast! Serve the customer the correct fraction of pizza. Click the cut buttons to prepare slices, then click 'Serve Order'. Use 'Clear Serving' to start over!</p>
             <p>Look out for **equivalent fractions**!</p>
         </div>
+
         <div id="game-feedback">
             <p id="feedback-message"></p>
         </div>
