@@ -1,17 +1,15 @@
 // --- Game State Variables ---
-const foodItems = ["pizza", "fries", "burger", "salad", "cake"];
+const foodItems = ["pizza"]; // Only pizza for now!
 let currentCustomerOrder = {}; // Stores the current order, e.g., { "pizza": { numerator: 1, denominator: 2 } }
 let playerServing = {}; // Stores what the player has currently prepared, e.g., { "pizza": { numerator: 1, denominator: 2 } }
-let availableIngredients = { // What whole ingredients the player has to cut from
-    "pizza": { numerator: 1, denominator: 1 } // Represents a whole pizza (1/1)
-    // Add other ingredients here as needed, e.g., "fries": { numerator: 1, denominator: 1 }
-};
+// In a real game, you might track individual cut pieces, but for now, we'll accumulate them
+// For simplicity, let's assume cutting always results in a portion being added to playerServing.
 
 // --- DOM Elements ---
 const orderTextElement = document.getElementById("order-text");
 const serveButton = document.getElementById("serve-button");
 const feedbackMessageElement = document.getElementById("feedback-message");
-const pizzaContainer = document.getElementById("pizza-container"); // Reference to the pizza ingredient area
+const pizzaContainer = document.getElementById("pizza-container");
 const pizzaImage = document.getElementById("pizza-img");
 const currentServingArea = document.getElementById("current-serving");
 
@@ -19,27 +17,15 @@ const currentServingArea = document.getElementById("current-serving");
 // --- Utility Functions ---
 
 /**
- * Generates a random fraction.
+ * Generates a random fraction for pizza (common denominators for pizza slices).
  * @returns {object} An object with numerator and denominator.
  */
-function generateRandomFraction() {
-    const denominators = [2, 3, 4, 5, 8, 10];
+function generateRandomPizzaFraction() {
+    // Pizza specific denominators: halves, thirds, quarters, eighths
+    const denominators = [2, 3, 4, 6, 8];
     const denominator = denominators[Math.floor(Math.random() * denominators.length)];
     let numerator = Math.floor(Math.random() * (denominator - 1)) + 1; // 1 to denominator-1
     return { numerator: numerator, denominator: denominator };
-}
-
-/**
- * Converts a fraction object to a string format (e.g., "1/2").
- * @param {object} fraction - {numerator, denominator}
- * @returns {string}
- */
-function fractionToString(fraction) {
-    // Handle cases where fraction might be 0/X (meaning empty)
-    if (fraction.numerator === 0) return "0";
-    // Handle whole numbers
-    if (fraction.denominator === 1) return `${fraction.numerator}`;
-    return `${fraction.numerator}/${fraction.denominator}`;
 }
 
 /**
@@ -59,7 +45,7 @@ function simplifyFraction(fraction) {
     const commonDivisor = gcd(fraction.numerator, fraction.denominator);
     return {
         numerator: fraction.numerator / commonDivisor,
-        denominator: fraction.denominator / commonDivisor
+        denominator: fraction.denominator / commonDivor
     };
 }
 
@@ -89,6 +75,17 @@ function areFractionsEquivalent(f1, f2) {
     return sF1.numerator === sF2.numerator && sF1.denominator === sF2.denominator;
 }
 
+/**
+ * Converts a fraction object to a string format (e.g., "1/2").
+ * @param {object} fraction - {numerator, denominator}
+ * @returns {string}
+ */
+function fractionToString(fraction) {
+    if (fraction.numerator === 0) return "0";
+    if (fraction.denominator === 1) return `${fraction.numerator}`; // Display whole numbers
+    return `${fraction.numerator}/${fraction.denominator}`;
+}
+
 
 // --- Core Game Logic Functions ---
 
@@ -96,70 +93,38 @@ function generateCustomerOrder() {
     currentCustomerOrder = {}; // Clear previous order
     playerServing = {}; // Reset player's serving for new order
     feedbackMessageElement.textContent = ""; // Clear feedback
-    currentServingArea.innerHTML = "<p>Drag and drop items here, or select portions.</p>"; // Reset serving display
-    
-    // Reset available ingredients to whole for each new order
-    availableIngredients = {
-        "pizza": { numerator: 1, denominator: 1 }
-        // Add other starting ingredients here
-    };
+    currentServingArea.innerHTML = "<p>Click 'Cut' buttons to add pizza slices!</p>"; // Reset serving display
 
-    const numItems = Math.floor(Math.random() * 2) + 1; // 1 or 2 items
-    const itemsChosen = [];
-
-    for (let i = 0; i < numItems; i++) {
-        let item = foodItems[Math.floor(Math.random() * foodItems.length)];
-        while (itemsChosen.includes(item)) {
-            item = foodItems[Math.floor(Math.random() * foodItems.length)];
-        }
-        itemsChosen.push(item);
-
-        const fraction = generateRandomFraction();
-        currentCustomerOrder[item] = fraction;
-    }
+    // Always generate an order for pizza only
+    const fraction = generateRandomPizzaFraction();
+    currentCustomerOrder["pizza"] = fraction;
 
     displayCustomerOrder();
-    updateAvailableIngredientsDisplay(); // New: Update display for available ingredients
+    updatePizzaDisplay(); // Update display for pizza
 }
 
 function displayCustomerOrder() {
-    let orderString = "";
-    for (const item in currentCustomerOrder) {
-        const fraction = currentCustomerOrder[item];
-        orderString += `${fractionToString(fraction)} of a ${item}. `;
-    }
-    orderTextElement.textContent = `Customer wants: ${orderString}`;
+    const fraction = currentCustomerOrder["pizza"];
+    orderTextElement.textContent = `Customer wants: ${fractionToString(fraction)} of a pizza.`;
 }
 
-function updateAvailableIngredientsDisplay() {
-    // This function would visually update the ingredients
-    // For now, it's a placeholder, but imagine updating the pizza image to show slices
-    // or maybe adding visual "pieces" that can be clicked/dragged.
-
-    // Example: You might hide the cut buttons if an ingredient is "used up"
-    // Or change the appearance of the whole pizza to reflect remaining portions (more complex)
+function updatePizzaDisplay() {
+    // This is where you would visually update the pizza based on cuts
+    // For now, it's a placeholder.
+    // We will develop this part next to show the pizza being "cut" visually.
 }
 
 
 // --- Player Actions ---
 
-// Function to handle "cutting" an ingredient and adding the cut piece to the serving area.
-function cutAndAddToServing(item, targetDenominator) {
-    // Check if we have the whole ingredient to cut from (or enough of it)
-    if (!availableIngredients[item] || availableIngredients[item].numerator === 0) {
-        feedbackMessageElement.textContent = `No ${item} left to cut!`;
-        return;
-    }
+// Function to handle "cutting" a pizza and adding the cut piece to the serving area.
+function cutAndAddToServing(targetDenominator) {
+    const item = "pizza"; // Always pizza now
 
     // Determine the size of one cut piece (e.g., 1/2, 1/3)
     const cutPiece = { numerator: 1, denominator: targetDenominator };
 
-    // You would eventually need to model *remaining* pieces of the ingredient.
-    // For simplicity right now, let's assume we cut a portion off a virtual "infinite" supply
-    // or that each button represents taking a specific cut *from a new whole*.
-    // The current setup simply adds the specified fraction to the player's serving.
-
-    // If the playerServing already has this item, add the fractions
+    // If the playerServing already has pizza, add the new slice to it
     if (playerServing[item]) {
         playerServing[item] = addFractions(playerServing[item], cutPiece);
     } else {
@@ -167,16 +132,17 @@ function cutAndAddToServing(item, targetDenominator) {
     }
 
     updateServingDisplay();
-    feedbackMessageElement.textContent = `Added ${fractionToString(cutPiece)} of a ${item} to your serving. Total ${fractionToString(playerServing[item])} of a ${item}.`;
+    feedbackMessageElement.textContent = `Added ${fractionToString(cutPiece)} of a pizza to your serving. Total: ${fractionToString(playerServing[item])} of a pizza.`;
 }
 
 function updateServingDisplay() {
     let servingString = "";
-    for (const item in playerServing) {
-        servingString += `<div class="serving-item">${fractionToString(playerServing[item])} ${item}</div>`;
+    if (playerServing["pizza"]) {
+        servingString = `<div class="serving-item">You are preparing: ${fractionToString(playerServing["pizza"])} of a pizza</div>`;
     }
+    
     if (servingString === "") {
-        currentServingArea.innerHTML = "<p>Drag and drop items here, or select portions.</p>";
+        currentServingArea.innerHTML = "<p>Click 'Cut' buttons to add pizza slices!</p>";
     } else {
         currentServingArea.innerHTML = servingString;
     }
@@ -184,61 +150,79 @@ function updateServingDisplay() {
 
 
 function serveOrder() {
-    let allCorrect = true;
+    const orderedItem = "pizza";
+    const orderedFraction = currentCustomerOrder[orderedItem];
     let feedback = "";
-    let matchedItems = new Set(); // To track which ordered items were matched
+    let allCorrect = true;
 
-    // Check if player has served something for each item in the order AND if it's correct
-    for (const orderedItem in currentCustomerOrder) {
-        const orderedFraction = currentCustomerOrder[orderedItem];
-
-        if (playerServing[orderedItem]) {
-            const servedFraction = playerServing[orderedItem];
-            if (areFractionsEquivalent(orderedFraction, servedFraction)) {
-                feedback += `Correctly served ${fractionToString(orderedFraction)} of a ${orderedItem}! `;
-                matchedItems.add(orderedItem);
-            } else {
-                feedback += `Incorrect portion for ${orderedItem}. Expected ${fractionToString(orderedFraction)}, got ${fractionToString(servedFraction)}. `;
-                allCorrect = false;
-            }
+    if (playerServing[orderedItem]) {
+        const servedFraction = playerServing[orderedItem];
+        if (areFractionsEquivalent(orderedFraction, servedFraction)) {
+            feedback = `Correctly served ${fractionToString(orderedFraction)} of a pizza!`;
         } else {
-            feedback += `Missing ${fractionToString(orderedFraction)} of a ${orderedItem}. `;
+            feedback = `Incorrect portion for pizza. Expected ${fractionToString(orderedFraction)}, but you prepared ${fractionToString(servedFraction)}.`;
             allCorrect = false;
         }
-    }
-
-    // Check for extra items served that weren't ordered
-    for (const servedItem in playerServing) {
-        if (!currentCustomerOrder[servedItem]) {
-            feedback += `Served extra ${fractionToString(playerServing[servedItem])} of a ${servedItem}. `;
-            allCorrect = false;
-        }
+    } else {
+        feedback = `Missing pizza! Customer wants ${fractionToString(orderedFraction)} of a pizza.`;
+        allCorrect = false;
     }
     
-    // Final check for overall correctness and complete order fulfillment
-    if (allCorrect && Object.keys(currentCustomerOrder).length === matchedItems.size) {
-        feedbackMessageElement.textContent = "Order served correctly! Great job!";
+    // Check if player served more than just pizza (not possible with current setup, but good for future)
+    for (const servedItem in playerServing) {
+        if (servedItem !== "pizza") {
+            feedback += ` You prepared an extra ${servedItem} which wasn't ordered.`;
+            allCorrect = false;
+        }
+    }
+
+
+    if (allCorrect) {
+        feedbackMessageElement.textContent = feedback + " Great job!";
         // Reset game for next order after a short delay
         setTimeout(() => {
             generateCustomerOrder();
         }, 2000);
     } else {
-        feedbackMessageElement.textContent = `Order incorrect: ${feedback}Please adjust your serving.`;
+        feedbackMessageElement.textContent = `Order incorrect: ${feedback} Please adjust your serving.`;
     }
 }
 
 
 // --- Event Listeners ---
 
-// Attach listeners to the "Cut" buttons.
-// Note: We'll need to update these if you have more dynamic ingredient displays.
+// We'll create buttons for various cut sizes dynamically later or keep fixed ones
+// For now, let's assume we have specific buttons for common pizza cuts
 pizzaContainer.querySelector("#cut-pizza-half").addEventListener("click", () => {
-    cutAndAddToServing("pizza", 2); // Cut into 1/2 and add that piece to serving
+    cutAndAddToServing(2); // Cut into 1/2 and add that piece to serving
 });
 
 pizzaContainer.querySelector("#cut-pizza-thirds").addEventListener("click", () => {
-    cutAndAddToServing("pizza", 3); // Cut into 1/3 and add that piece to serving
+    cutAndAddToServing(3); // Cut into 1/3 and add that piece to serving
 });
+
+// Let's add a button to cut into quarters too, as it's common for pizza
+const cutPizzaQuartersButton = document.createElement('button');
+cutPizzaQuartersButton.id = 'cut-pizza-quarters';
+cutPizzaQuartersButton.textContent = 'Cut in Quarters';
+pizzaContainer.appendChild(cutPizzaQuquartersButton); // Add it to the container
+
+cutPizzaQuartersButton.addEventListener("click", () => {
+    cutAndAddToServing(4); // Cut into 1/4 and add that piece to serving
+});
+
+// A button to clear the current serving (useful for corrections)
+const clearServingButton = document.createElement('button');
+clearServingButton.id = 'clear-serving';
+clearServingButton.textContent = 'Clear Serving';
+pizzaContainer.appendChild(clearServingButton); // Or place it near the serving area
+
+clearServingButton.addEventListener("click", () => {
+    playerServing = {};
+    updateServingDisplay();
+    feedbackMessageElement.textContent = "Serving cleared. Start fresh!";
+});
+
 
 serveButton.addEventListener("click", serveOrder);
 
