@@ -2,8 +2,6 @@
 const foodItems = ["pizza"]; // Only pizza for now!
 let currentCustomerOrder = {}; // Stores the current order, e.g., { "pizza": { numerator: 1, denominator: 2 } }
 let playerServing = {}; // Stores what the player has currently prepared, e.g., { "pizza": { numerator: 1, denominator: 2 } }
-// In a real game, you might track individual cut pieces, but for now, we'll accumulate them
-// For simplicity, let's assume cutting always results in a portion being added to playerServing.
 
 // --- DOM Elements ---
 const orderTextElement = document.getElementById("order-text");
@@ -12,7 +10,8 @@ const feedbackMessageElement = document.getElementById("feedback-message");
 const pizzaContainer = document.getElementById("pizza-container");
 const pizzaImage = document.getElementById("pizza-img");
 const currentServingArea = document.getElementById("current-serving");
-
+const customFractionInput = document.getElementById("custom-fraction-input");
+const cutCustomButton = document.getElementById("cut-custom-button");
 
 // --- Utility Functions ---
 
@@ -32,7 +31,13 @@ function generateRandomPizzaFraction() {
  * Finds the greatest common divisor (GCD) using Euclidean algorithm.
  */
 function gcd(a, b) {
-    return b === 0 ? a : gcd(b, a % b);
+    // Ensure inputs are positive for GCD calculation
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+        [a, b] = [b, a % b];
+    }
+    return a;
 }
 
 /**
@@ -45,7 +50,7 @@ function simplifyFraction(fraction) {
     const commonDivisor = gcd(fraction.numerator, fraction.denominator);
     return {
         numerator: fraction.numerator / commonDivisor,
-        denominator: fraction.denominator / commonDivor
+        denominator: fraction.denominator / commonDivisor
     };
 }
 
@@ -94,6 +99,7 @@ function generateCustomerOrder() {
     playerServing = {}; // Reset player's serving for new order
     feedbackMessageElement.textContent = ""; // Clear feedback
     currentServingArea.innerHTML = "<p>Click 'Cut' buttons to add pizza slices!</p>"; // Reset serving display
+    customFractionInput.value = ""; // Clear custom input field
 
     // Always generate an order for pizza only
     const fraction = generateRandomPizzaFraction();
@@ -117,14 +123,23 @@ function updatePizzaDisplay() {
 
 // --- Player Actions ---
 
-// Function to handle "cutting" a pizza and adding the cut piece to the serving area.
-function cutAndAddToServing(targetDenominator) {
+/**
+ * Function to handle "cutting" a pizza and adding the cut piece to the serving area.
+ * @param {number} numerator - The numerator of the slice to add.
+ * @param {number} denominator - The denominator of the slice to add.
+ */
+function cutAndAddToServing(numerator, denominator) {
     const item = "pizza"; // Always pizza now
 
-    // Determine the size of one cut piece (e.g., 1/2, 1/3)
-    const cutPiece = { numerator: 1, denominator: targetDenominator };
+    const cutPiece = { numerator: numerator, denominator: denominator };
 
-    // If the playerServing already has pizza, add the new slice to it
+    // Basic validation for the piece being cut
+    if (numerator <= 0 || denominator <= 0) {
+        feedbackMessageElement.textContent = "Cannot cut a non-positive fraction.";
+        return;
+    }
+
+
     if (playerServing[item]) {
         playerServing[item] = addFractions(playerServing[item], cutPiece);
     } else {
@@ -140,7 +155,7 @@ function updateServingDisplay() {
     if (playerServing["pizza"]) {
         servingString = `<div class="serving-item">You are preparing: ${fractionToString(playerServing["pizza"])} of a pizza</div>`;
     }
-    
+
     if (servingString === "") {
         currentServingArea.innerHTML = "<p>Click 'Cut' buttons to add pizza slices!</p>";
     } else {
@@ -167,15 +182,6 @@ function serveOrder() {
         feedback = `Missing pizza! Customer wants ${fractionToString(orderedFraction)} of a pizza.`;
         allCorrect = false;
     }
-    
-    // Check if player served more than just pizza (not possible with current setup, but good for future)
-    for (const servedItem in playerServing) {
-        if (servedItem !== "pizza") {
-            feedback += ` You prepared an extra ${servedItem} which wasn't ordered.`;
-            allCorrect = false;
-        }
-    }
-
 
     if (allCorrect) {
         feedbackMessageElement.textContent = feedback + " Great job!";
@@ -188,45 +194,91 @@ function serveOrder() {
     }
 }
 
+// Function to handle custom fraction input
+function handleCustomCut() {
+    const inputString = customFractionInput.value.trim(); // Get value and remove whitespace
+    if (!inputString) {
+        feedbackMessageElement.textContent = "Please enter a fraction (e.g., 1/2 or 3/4).";
+        return;
+    }
+
+    const parts = inputString.split('/');
+
+    let numerator, denominator;
+
+    if (parts.length === 2) {
+        // It's a fraction like "1/2"
+        numerator = parseInt(parts[0], 10);
+        denominator = parseInt(parts[1], 10);
+    } else if (parts.length === 1) {
+        // It's a whole number like "1" (meaning 1/1)
+        numerator = parseInt(parts[0], 10);
+        denominator = 1;
+    } else {
+        feedbackMessageElement.textContent = "Invalid fraction format. Use 'N/D' or a whole number.";
+        return;
+    }
+
+    // Basic validation
+    if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+        feedbackMessageElement.textContent = "Invalid numbers for fraction. Please use valid digits and a non-zero denominator.";
+        return;
+    }
+    if (numerator < 0) { // Keep fractions positive for now
+         feedbackMessageElement.textContent = "Please enter positive numerators.";
+        return;
+    }
+    // You might want to enforce positive denominators here as well, if that fits your game rules.
+
+    cutAndAddToServing(numerator, denominator); // Use the existing function
+    customFractionInput.value = ""; // Clear the input field
+}
+
 
 // --- Event Listeners ---
-
-// We'll create buttons for various cut sizes dynamically later or keep fixed ones
-// For now, let's assume we have specific buttons for common pizza cuts
-pizzaContainer.querySelector("#cut-pizza-half").addEventListener("click", () => {
-    cutAndAddToServing(2); // Cut into 1/2 and add that piece to serving
-});
-
-pizzaContainer.querySelector("#cut-pizza-thirds").addEventListener("click", () => {
-    cutAndAddToServing(3); // Cut into 1/3 and add that piece to serving
-});
-
-// Let's add a button to cut into quarters too, as it's common for pizza
-const cutPizzaQuartersButton = document.createElement('button');
-cutPizzaQuartersButton.id = 'cut-pizza-quarters';
-cutPizzaQuartersButton.textContent = 'Cut in Quarters';
-pizzaContainer.appendChild(cutPizzaQuquartersButton); // Add it to the container
-
-cutPizzaQuartersButton.addEventListener("click", () => {
-    cutAndAddToServing(4); // Cut into 1/4 and add that piece to serving
-});
-
-// A button to clear the current serving (useful for corrections)
-const clearServingButton = document.createElement('button');
-clearServingButton.id = 'clear-serving';
-clearServingButton.textContent = 'Clear Serving';
-pizzaContainer.appendChild(clearServingButton); // Or place it near the serving area
-
-clearServingButton.addEventListener("click", () => {
-    playerServing = {};
-    updateServingDisplay();
-    feedbackMessageElement.textContent = "Serving cleared. Start fresh!";
-});
-
-
-serveButton.addEventListener("click", serveOrder);
-
-// --- Initial Game Setup ---
 document.addEventListener("DOMContentLoaded", () => {
+    // Attach listeners to the "Cut" buttons.
+    pizzaContainer.querySelector("#cut-pizza-half").addEventListener("click", () => {
+        cutAndAddToServing(1, 2); // Pass numerator 1, denominator 2
+    });
+
+    pizzaContainer.querySelector("#cut-pizza-thirds").addEventListener("click", () => {
+        cutAndAddToServing(1, 3); // Pass numerator 1, denominator 3
+    });
+
+    const cutPizzaQuartersButton = document.createElement('button');
+    cutPizzaQuartersButton.id = 'cut-pizza-quarters';
+    cutPizzaQuartersButton.textContent = 'Cut in Quarters';
+    pizzaContainer.appendChild(cutPizzaQuartersButton);
+
+    cutPizzaQuartersButton.addEventListener("click", () => {
+        cutAndAddToServing(1, 4); // Pass numerator 1, denominator 4
+    });
+
+    // A button to clear the current serving (useful for corrections)
+    const clearServingButton = document.createElement('button');
+    clearServingButton.id = 'clear-serving';
+    clearServingButton.textContent = 'Clear Serving';
+    pizzaContainer.appendChild(clearServingButton); // Or place it near the serving area
+
+    clearServingButton.addEventListener("click", () => {
+        playerServing = {};
+        updateServingDisplay();
+        feedbackMessageElement.textContent = "Serving cleared. Start fresh!";
+    });
+
+    serveButton.addEventListener("click", serveOrder);
+
+    // Add event listener for the custom cut button
+    cutCustomButton.addEventListener("click", handleCustomCut);
+
+    // Optional: Allow pressing Enter in the input field to trigger the cut
+    customFractionInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            handleCustomCut();
+        }
+    });
+
+    // --- Initial Game Setup ---
     generateCustomerOrder(); // Generate the first order when the page loads
 });
