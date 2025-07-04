@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraction Feast: Food Truck Challenge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <h1>Fraction Feast Food Truck Challenge!</h1>
+
+        <div id="customer-order">
+            <h2>Customer Order:</h2>
+            <p id="order-text">Waiting for next customer...</p>
+            </div>
+
+        <div id="ingredient-station">
+            <h2>Your Ingredients:</h2>
+            <div id="pizza-container" class="ingredient-item">
+                <img src="https://via.placeholder.com/150x150?text=Pizza" alt="Whole Pizza" id="pizza-img">
+                <button id="cut-pizza-half">Cut in Half</button>
+                <button id="cut-pizza-thirds">Cut in Thirds</button>
+                </div>
+            </div>
+
+        <div id="serving-area">
+            <h2>Your Serving:</h2>
+            <div id="current-serving">
+                <p>Drag and drop items here, or select portions.</p>
+            </div>
+            <button id="serve-button">Serve Order</button>
+        </div>
+
+        <div id="game-feedback">
+            <p id="feedback-message"></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
