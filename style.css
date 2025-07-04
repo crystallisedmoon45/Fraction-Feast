@@ -15,18 +15,25 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     width: 90%;
-    max-width: 800px;
+    max-width: 1000px; /* Increased max-width to give more space for the new column */
     display: grid;
     grid-template-areas:
-        "header header"
-        "order ingredients"
-        "serving feedback";
-    grid-template-columns: 1fr 1fr;
+        "header header header"
+        "order ingredients info"
+        "serving feedback info"; /* 'info' spans rows 2 and 3 */
+    grid-template-columns: 1fr 1fr 0.7fr; /* Adjusted column widths: order, ingredients, info */
     gap: 20px;
 }
 
-h1, h2 {
+h1 {
+    grid-area: header; /* Ensure header spans all columns */
     color: #ff6347; /* Tomato */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #ff6347;
     text-align: center;
 }
 
@@ -125,13 +132,91 @@ h1, h2 {
     color: #d32f2f; /* Red */
 }
 
+/* Style for the info textbox */
+#info-textbox {
+    grid-area: info; /* Assign it to the 'info' grid area */
+    border: 1px dashed #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #e0f2f7; /* Light Cyan */
+    overflow-y: auto; /* Add scroll if content is too long */
+    max-height: 400px; /* Limit height if needed */
+}
+
+#info-textbox h2 {
+    margin-top: 0;
+}
+
+#info-textbox p {
+    font-size: 0.9em;
+    line-height: 1.4;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+/* Style for custom cut section */
+.custom-cut-section {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.custom-cut-section label {
+    display: block; /* Make label appear above input */
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.custom-cut-section input[type="text"] {
+    width: calc(100% - 70px); /* Adjust width, considering button width */
+    padding: 8px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    vertical-align: middle; /* Align with button */
+}
+
+.custom-cut-section button {
+    padding: 8px 12px;
+    background-color: #008CBA; /* Blue */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    vertical-align: middle; /* Align with input */
+}
+
+.custom-cut-section button:hover {
+    background-color: #007bb5;
+}
+
 /* Responsive adjustments */
+@media (max-width: 800px) { /* Adjust breakpoint for 3 columns */
+    #game-container {
+        /* On smaller screens, stack the info box below the ingredient station */
+        grid-template-areas:
+            "header header"
+            "order ingredients"
+            "info info" /* Info box now spans two columns in this row */
+            "serving feedback";
+        grid-template-columns: 1fr 1fr; /* Go back to two columns */
+    }
+    #info-textbox {
+        max-height: 200px; /* Shorter on smaller screens */
+    }
+}
+
 @media (max-width: 600px) {
     #game-container {
         grid-template-areas:
             "header"
             "order"
             "ingredients"
+            "info" /* Stack info box individually */
             "serving"
             "feedback";
         grid-template-columns: 1fr;
